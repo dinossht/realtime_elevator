@@ -1,0 +1,9 @@
+[submodule "driver-erlang"]
+	path = driver-erlang
+	url = https://github.com/TTK4145/driver-erlang.git
+[submodule "Simulator-v2"]
+	path = Simulator-v2
+	url = https://github.com/TTK4145/Simulator-v2.git
+[submodule "elevator-server"]
+	path = elevator-server
+	url = https://github.com/TTK4145/elevator-server.git
