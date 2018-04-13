@@ -4,6 +4,7 @@
 
 -record (order, {floor, direction}).
 
+%dette var gøy hæ dino???
 start() ->
 	io:fwrite("Start Order Processor Module\n"),
 	%ets:new(orders, [bag, named_table]),
