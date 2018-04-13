@@ -75,24 +75,40 @@ order_stuff(L) ->
   			order_stuff(L)
   	end. 
 
+get_next_move(Last_floor, Last_direction = up) ->
+	case request_at_floor(Last_floor) of
+		true -> open;
+		false -> 
+			case request_above(Last_floor) of
+				true -> up;
+				false -> 
+					case request_below(Last_floor) of
+						true -> down;
+						false -> stop
+					end
+			end
+	end.
+get_next_move(Last_floor, Last_direction = down) ->
+	case request_at_floor(Last_floor) of 
+		true -> {open};
+		false ->	
+			case request_above(Last_floor) of
+				true -> up;
+				false -> 
+					case request_below(Last_floor) of
+						true -> {down};
+						false -> {stop}
+					end
+			end
+	end.
 
-%order_bag(B) ->
-%	receive
-%		{add, Order} ->
-%  			ets:insert(B, Order),
-%  			%io:format(Order),
-%  			ets:lookup(B, three),
-%  			io:fwrite("i am here"),
-%  			order_bag(B);
-%  		{show_all_up} ->
-%  			A = ets:lookup(B, three),
-%  			io:fwrite(A),
-%  			order_bag(B)%
-%  	end. 
+
 test_request(Floor) ->
 	order_queue ! {request, Floor}.
 
 %request_new_direction(Last_direction, Last_floor, PID) ->
+request_at_floor(Floor) ->
+	
 request_at_floor(Floor, L) ->
 	case lists:keyfind(Floor,2 , L) of 
 		{order, Floor, _} -> true;
