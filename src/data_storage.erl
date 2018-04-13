@@ -5,15 +5,34 @@
 start() ->
   io:format("Start data storage module ~n"),
   ets:new(order_storage_id, [set, named_table]),
-  ets:new(prev_button_state_storage_id, [set, named_table]),
-  ets:new(current_direction_storage_id, [set, named_table]),
-  ets:new(current_floor_storage_id, [set, named_table]).
+  %ets:new(prev_button_state_storage_id, [set, named_table]),
+  %ets:new(current_direction_storage_id, [set, named_table]),
+  ets:new(current_floor_storage_id, [set, named_table]),
+  data_storage().
 
+print(L) ->
+  case L of
+    [] -> io:format("Order button empty~n");
+    _ -> io:format("Order button: ~p~n", L)
+  end.
+
+
+
+data_storage() ->
+  receive
+    {current_floor_add, Floor_nr} ->
+      current_floor_add(Floor_nr);
+    {order_add, Floor_nr, Button_type, Status} ->
+      order_add(Floor_nr, Button_type, Status),
+      order_getStatus(Floor_nr, Button_type)
+  end,
+  data_storage().
 
 order_add(Floor_nr, Button_type, Status) ->
   ets:insert(order_storage_id, {{Floor_nr, Button_type}, Status}).
 order_getStatus(Floor_nr, Button_type) ->
   Order = ets:lookup(order_storage_id, {Floor_nr, Button_type}),
+  print(Order),
   case Order of
     [] -> 0;
     [H|_] ->
@@ -35,9 +54,9 @@ prev_button_state_getStatus(Floor_nr, Button_type) ->
 
 
 current_direction_add(Direction) ->
-  ets:insert(prev_button_state_storage_id, {direction, Direction}).
+  ets:insert(current_direction_storage_id, {direction, Direction}).
 current_direction_getStatus() ->
-  Order = ets:lookup(prev_button_state_storage_id, direction),
+  Order = ets:lookup(current_direction_storage_id, direction),
   case Order of
     [] -> 0;
     [H|_] ->
@@ -47,9 +66,9 @@ current_direction_getStatus() ->
 
 
 current_floor_add(Floor_nr) ->
-  ets:insert(prev_button_state_storage_id, {floor_nr, Floor_nr}).
+  ets:insert(current_floor_storage_id, {floor_nr, Floor_nr}).
 current_floor_getStatus() ->
-  Order = ets:lookup(prev_button_state_storage_id, floor_nr),
+  Order = ets:lookup(current_floor_storage_id, floor_nr),
   case Order of
     [] -> 0;
     [H|_] ->
