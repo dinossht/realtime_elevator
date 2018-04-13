@@ -4,7 +4,7 @@
 -define(DOOR_OPEN_TIMEOUT_MS, 3000).
 
 
-%TODO Should update data to send via network
+%TODO Should update state data to send via network
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Elevator interface wrapper %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -14,7 +14,7 @@ set_door_open_light(State) ->
   elevator_interface:set_door_open_light(pid_elevator_interface, State).
 set_floor_indicator(Floor_nr) ->
   elevator_interface:set_floor_indicator(pid_elevator_interface, Floor_nr).
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 start() ->
   io:format("Start state machine module~n"),
@@ -22,30 +22,28 @@ start() ->
 
 
 state_init() ->
-  io:format("State: init ~n"),
-  pid_event_handler ! {state, intializing},
-
+  io:format("State: startup~n"),
+  elevator_interface:set_motor_direction(pid_elevator_interface, down),
   receive
-    {event, first_floor_passed} ->
-      state_idle()
-    after 500 ->
-      state_init()
+    {floor_detected} -> state_idle()
+    after 500 -> state_init()
   end.
 
 
 state_idle() ->
   io:format("State: idle~n"),
-  receive
-    {event, new_order, Direction} ->
-      io:format("neworder~n"),
-      set_motor_direction(Direction),
-      state_moving(Direction);
-    {event, order_floor_reached} ->
-      set_motor_direction(stop),
-      state_open_door()
-  after 1500 ->
-    state_idle()
-  end.
+  set_motor_direction(stop),
+  Next_move = stop,%request_next_move(),
+    case Next_move of
+      up -> state_moving(up);
+      down -> state_moving(down);
+      open_door -> state_open_door();
+      stop ->
+        receive
+          {new_order} -> state_idle()
+        end
+    end.
+
 
 
 state_open_door() ->
@@ -58,15 +56,12 @@ state_open_door() ->
 
 
 state_moving(Direction) ->
-  io:format("State: Moving up ~n"),
+  set_motor_direction(Direction),
   receive
-    {event, floor_detected, Floor_nr} ->
-      set_floor_indicator(Floor_nr),
-      set_motor_direction(stop),
+    {floor_detected} ->
       state_idle()
-  after 1500 ->
-    state_moving(Direction)
   end.
+
 
 
 
