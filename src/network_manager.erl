@@ -7,7 +7,8 @@
 start() ->
   node_init(),
   spawn(fun listen/0),
-  spawn(fun broadcast/0).
+  spawn(fun broadcast/0),
+  register(test_pid, spawn(fun test_node/0)).
 
 node_init() ->
   os:cmd("epmd -daemon"), % start epmd as daemon in case it's not running
@@ -51,6 +52,15 @@ name_manager(NodeName) ->
     PID ! {node_name, NodeName}
   end,
   name_manager(NodeName).
+
+
+test_node() ->
+  receive
+    {test} ->
+      io:format("node msg works~n")
+  end,
+  test_node().
+
 
 
 
