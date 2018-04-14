@@ -29,7 +29,11 @@ listen(ReceiveSocket) ->
   io:format("NodeName: ~p~n", [NodeName]), %debug
   Node = list_to_atom(NodeName),
   io:format("is member bool: ~p~n", [lists:member(Node, [node()|nodes()])]), %debug
-  io:format("Nodes: ~p~n", nodes()),
+  case nodes() == [] of
+    true -> ok;
+    false -> io:format("Nodes: ~p~n", nodes())
+  end,
+
 
   case Node /= node() of
     true -> {test_pid, Node} ! {test};
