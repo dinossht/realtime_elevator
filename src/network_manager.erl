@@ -14,7 +14,7 @@ node_init() ->
   timer:sleep(100), % give epmd some time to start
   {_ok, [{IPtuple, _Broadcast, _Self} | _Disregard]} = inet:getif(), %fix this (make it more general)
   NodeName = "elevator@"++integer_to_list(element(1,IPtuple))++"."++integer_to_list(element(2,IPtuple))++"."++integer_to_list(element(3,IPtuple))++"."++integer_to_list(element(4,IPtuple)), %how do I program
-  %NodeName = "heis@"++[tuple_to_list(IPtuple)], % this should work, because a name only has to be unique (doesn't have to be the actual IP at @host)
+
   register(nameman, spawn(fun() -> name_manager(NodeName) end)),
   net_kernel:start([list_to_atom(NodeName), longnames]),
   erlang:set_cookie(node(), 'robert-og-dino').
@@ -25,9 +25,9 @@ listen() ->
 
 listen(ReceiveSocket) ->
   {ok, {_Address, _Port, NodeName}} = gen_udp:recv(ReceiveSocket, 0),
-  %io:format("NodeName: ~p~n", [NodeName]), %debug
+  io:format("NodeName: ~p~n", [NodeName]), %debug
   Node = list_to_atom(NodeName),
-  %io:format("is member bool: ~p~n", [lists:member(Node, [node()|nodes()])]), %debug
+  io:format("is member bool: ~p~n", [lists:member(Node, [node()|nodes()])]), %debug
   case lists:member(Node, [node()|nodes()]) of
     true ->
       listen(ReceiveSocket);
