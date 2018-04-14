@@ -32,7 +32,8 @@ listen(ReceiveSocket) ->
 
   case Node /= node() of
     true -> {test_pid, Node} ! {test};
-    false -> io:format("not me~n"),
+    false -> io:format("not me~n")
+  end,
 
   case lists:member(Node, [node()|nodes()]) of
     true ->
