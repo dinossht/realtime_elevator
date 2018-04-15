@@ -13,8 +13,6 @@ set_motor_direction(Direction) ->
   elevator_interface:set_motor_direction(pid_elevator_interface, Direction).
 set_door_open_light(State) ->
   elevator_interface:set_door_open_light(pid_elevator_interface, State).
-set_floor_indicator(Floor_nr) ->
-  elevator_interface:set_floor_indicator(pid_elevator_interface, Floor_nr).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 start() ->

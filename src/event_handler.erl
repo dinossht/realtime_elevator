@@ -14,6 +14,8 @@ get_order_button_state(Floor_nr, Button_type) ->
   elevator_interface:get_order_button_state(pid_elevator_interface, Floor_nr, Button_type).
 get_floor_sensor_state() ->
   elevator_interface:get_floor_sensor_state(pid_elevator_interface).
+set_floor_indicator(Floor_nr) ->
+  elevator_interface:set_floor_indicator(pid_elevator_interface, Floor_nr).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 start() ->
@@ -32,7 +34,8 @@ event_handle_floorDetected() ->
     _ ->
       io:format("Floor reached~n"),
       pid_state_machine ! {floor_detected},
-      pid_data_storage ! {current_floor_add, Floor_nr}
+      pid_data_storage ! {current_floor_add, Floor_nr},
+      set_floor_indicator(Floor_nr)
   end,
   timer:sleep(?FLOOR_SENSOR_POLL_PERIOD_MS),
   event_handle_floorDetected().
