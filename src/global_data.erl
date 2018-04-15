@@ -23,12 +23,12 @@ other_elevators(Elevators) ->
         [] -> io:fwrite("tom liste");
       _ -> io:fwrite("Elevators: ~p",[Elevators])
       end,
-      io:fwrite("Hva er dette? ~p~n",[Status]),
+      %io:fwrite("Hva er dette? ~p~n",[Status]),
       case listFind(Node, Elevators) of
         false -> io:fwrite("Dette gikk ~n"),
           case Elevators of
             [] -> io:fwrite("tom liste");
-            _ -> io:fwrite("Elevators: ~p",[Elevators])
+            _ -> io:fwrite("Elevators: ~p~n",[Elevators])
           end,
           other_elevators([[Node,Status]] ++ Elevators);
         [OldStatus] -> 
@@ -61,11 +61,11 @@ recursiveShit(Number, Node, [Head|Tail]) ->
 
 
 broadcast_status() ->
-  io:format("broadcast status!~n"),
+  %io:format("broadcast status!~n"),
   pid_data_storage ! {get_status, self()},
   receive 
     {Num_of_orders, Floor, Direction} ->
-      io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
+      %io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
       lists:foreach(fun(Node) -> 
       {all_elevators, Node} ! {add_status, node(), {Num_of_orders, Floor, Direction}} end, nodes())
   end.
@@ -117,7 +117,7 @@ order_queue(Orders) ->
     [] -> io:fwrite("tom liste");
     _ -> io:fwrite("Elevators orders in order_queue: ~p~n",[Orders])
   end,
-  io:format("ORDER MANAGER: Orderlist of: ~p~n", [Orders]), %debug
+  %io:format("ORDER MANAGER: Orderlist of: ~p~n", [Orders]), %debug
   receive
     {add_order, NewOrder} ->
       case sets:is_element(NewOrder, sets:from_list(Orders)) of
@@ -134,7 +134,7 @@ order_queue(Orders) ->
       end;
 
     {remove_order, Order} ->
-      io:format("ORDER MANAGER: ACTUALLY removing order.~n"),
+      %io:format("ORDER MANAGER: ACTUALLY removing order.~n"),
       order_queue(Orders--[Order]);
 
     {get_orders, PID} ->
@@ -143,7 +143,7 @@ order_queue(Orders) ->
   end.
 
 broadcast_orders() ->
-  io:format("broadcast broadcast!~n"),
+  %io:format("broadcast broadcast!~n"),
   GlobalOrders = get_orders(),
 
   lists:foreach(fun(Node) ->
@@ -151,7 +151,7 @@ broadcast_orders() ->
   end, nodes()).
 
 broadcast_orders(OrderList) ->
-  io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
+  %io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
   lists:foreach(fun(Node) ->
     lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order} end, OrderList)
   end, nodes()).
@@ -167,11 +167,11 @@ listFind ( Element, [] ) ->
     false;
 
 listFind ( Element, [ Elev | ListTail ] ) ->
-  io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
+  %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
   [Node|Status] = Elev,
     case ( Node == Element ) of
         true    ->  
-          io:fwrite("Item: ~p",[Elev]),
+          %io:fwrite("Item: ~p",[Elev]),
           Status;
         false   ->  listFind(Element, ListTail)
     end.
@@ -181,11 +181,11 @@ findOrder ( Element, [] ) ->
     false;
 
 findOrder ( Element, [ Elev | ListTail ] ) ->
-  io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
+  %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
   [Node|Status] = Elev,
     case ( Node == Element ) of
         true    ->  
-          io:fwrite("Item: ~p",[Elev]),
+          %io:fwrite("Item: ~p",[Elev]),
           Status;
         false   ->  listFind(Element, ListTail)
     end.
@@ -206,7 +206,7 @@ remove_order(Floor, Direction, Order_status) ->
   end.
 
 remove_order(Order) ->
-  io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
+  %io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
   %{_,Floor,Direction,Order_status} = Order,
   %global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},

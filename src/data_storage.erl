@@ -146,7 +146,7 @@ get_next_move() ->
               case request_below(Current_floor_nr) of
                 true -> down;
                 false ->
-                  io:format("dir up stop ~n"),
+                  %io:format("dir up stop ~n"),
                   stop
               end
           end;
@@ -157,7 +157,7 @@ get_next_move() ->
               case request_above(Current_floor_nr) of
                 true -> up;
                 false ->
-                  io:format("dir down stop ~n"),
+                  %io:format("dir down stop ~n"),
                   stop
               end
           end;
