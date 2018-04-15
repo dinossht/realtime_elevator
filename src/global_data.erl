@@ -1,11 +1,9 @@
 -module(global_data).
--record(order, {floor, direction, order_status}).
+-record(order, {floor, direction}).
 
 -export([ start/0,
-          add_order/3,
-          remove_order/1,
+          add_order/2,
           remove_order/2,
-          remove_order/3,
           get_orders/0,
           broadcast_status/0,
           listFind/2]).
@@ -62,29 +60,25 @@ broadcast_status() ->
 %  broadcast_status(),
 %status_synchronizer().
 
-add_order(Floor, Direction, Order_status) ->
-  NewOrder = #order{floor = Floor, direction = Direction, order_status = Order_status},
-    GlobalOrders = get_orders(),
-    case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
-      false ->
-        global_orderman ! {add_order, NewOrder},
-        broadcast_orders();
-      true ->
-        ok
-    end.
+
+add_order(Floor, Direction) ->
+  NewOrder = #order{floor = Floor, direction = Direction},
+  %GlobalOrders = get_orders_(),
+  %case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
+  %  false ->
+  io:format("Adding order~n"),
+      global_orderman ! {add_order, NewOrder},
+      broadcast_orders().
+  %  true ->
+  %    ok
+  %end.
+
 
 remove_order(Floor, Direction) ->
-  remove_order(Floor, Direction, 3).
-remove_order(Floor, Direction, Order_status) ->
-  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
+  Order = #order{floor = Floor, direction = Direction},
 %  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
-
-  case Order_status of
-    0 -> ok;
-    _ -> remove_order(Floor, Direction, Order_status - 1)
-  end.
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
 
 
 get_orders() ->
@@ -98,6 +92,10 @@ get_orders() ->
   end.
 
 order_queue(Orders) ->
+  case Orders of
+    [] -> io:fwrite("tom liste");
+    _ -> io:fwrite("Elevators: ~p",[Orders])
+  end,
   io:format("ORDER MANAGER: Orderlist of: ~p~n", [Orders]), %debug
   receive
     {add_order, NewOrder} ->
@@ -170,11 +168,18 @@ findOrder ( Element, [ Elev | ListTail ] ) ->
 
 -ifdef (comment1).
 remove_order(Floor, Direction) ->
-  Order = #order{floor = Floor, direction = Direction},
+  remove_order(Floor, Direction, 3).
+remove_order(Floor, Direction, Order_status) ->
+  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
 %  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
--endif.
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
+
+  case Order_status of
+    0 -> ok;
+    _ -> remove_order(Floor, Direction, Order_status - 1)
+  end.
+
 remove_order(Order) ->
   io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
   %{_,Floor,Direction,Order_status} = Order,
@@ -182,4 +187,19 @@ remove_order(Order) ->
   global_orderman ! {remove_order, Order},
   lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
 
+-endif.
 
+
+-ifdef(comment3).
+add_order(Floor, Direction, Order_status) ->
+  NewOrder = #order{floor = Floor, direction = Direction, order_status = Order_status},
+  GlobalOrders = get_orders(),
+  case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
+    false ->
+      global_orderman ! {add_order, NewOrder},
+      broadcast_orders();
+    true ->
+      ok
+  end.
+
+-endif.
