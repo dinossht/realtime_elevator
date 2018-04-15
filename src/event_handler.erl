@@ -32,7 +32,6 @@ event_handle_floorDetected() ->
     between_floors ->
       io:format("");
     _ ->
-      io:format("Floor reached~n"),
       pid_state_machine ! {floor_detected},
       pid_data_storage ! {current_floor_add, Floor_nr},
       set_floor_indicator(Floor_nr)

@@ -94,7 +94,7 @@ get_orders() ->
 order_queue(Orders) ->
   case Orders of
     [] -> io:fwrite("tom liste");
-    _ -> io:fwrite("Elevators: ~p",[Orders])
+    _ -> io:fwrite("Elevators orders in order_queue: ~p~n",[Orders])
   end,
   io:format("ORDER MANAGER: Orderlist of: ~p~n", [Orders]), %debug
   receive
@@ -135,6 +135,7 @@ broadcast_orders(OrderList) ->
 order_synchronizer() ->
   timer:sleep(20000),
   broadcast_orders(),
+  broadcast_status(),
 order_synchronizer().
 
 
