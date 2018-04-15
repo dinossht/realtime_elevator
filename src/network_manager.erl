@@ -1,5 +1,5 @@
 -module(network_manager).
--export([start/1, name_manager/1]).
+-export([start/1]).
 
 %-define(RECEIVE_PORT, 20050).
 %-define(SEND_PORT, 20060).
@@ -11,6 +11,7 @@
 -define(NODE1_RECV_PORT, 20050).
 -define(NODE2_RECV_PORT, 20051).
 
+%name is 'atom'
 start(Name) ->
   node_init(Name),
   spawn(fun listen/0),
