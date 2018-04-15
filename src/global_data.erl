@@ -7,8 +7,7 @@
           get_orders/0,
           broadcast_status/0,
           listFind/2]).
-%-record(order, {floor, direction}).
--record(status, {floor, direction, state}).
+%-record(status, {floor, direction, state}).
 
 start() ->
   register(global_orderman, spawn(fun() -> order_queue([]) end)),
