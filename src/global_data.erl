@@ -6,7 +6,8 @@
           remove_order/2,
           get_orders/0,
           broadcast_status/0,
-          listFind/2]).
+          listFind/2,
+          whoHasFewestOrders/0]).
 %-record(status, {floor, direction, state}).
 
 start() ->
@@ -38,14 +39,35 @@ other_elevators(Elevators) ->
       other_elevators(Elevators)
   end.
 
+whoHasFewestOrders() ->
+  all_elevators ! {get_status, self()},
+
+  receive
+    {status, Elevators} ->
+      recursiveShit(10, node(),Elevators)
+  end.
+  
+
+recursiveShit(_, Node, []) ->
+  Node;
+recursiveShit(Number, Node, [Head|Tail]) ->
+  [New_node, {Num_of_orders, _, _}] = Head,
+  io:fwrite("Node = ~p.  Number: ~p~n", [Node,Number]),
+  io:fwrite("Head: ~p.   Tails: ~p~n",[Head,Tail]),
+  case Num_of_orders < Number of
+    true -> recursiveShit(Num_of_orders, New_node, Tail);
+    false -> recursiveShit(Number, Node, Tail)
+  end.
+
+
 broadcast_status() ->
   io:format("broadcast status!~n"),
   pid_data_storage ! {get_status, self()},
   receive 
-    {Floor, Direction} ->
+    {Num_of_orders, Floor, Direction} ->
       io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
       lists:foreach(fun(Node) -> 
-      {all_elevators, Node} ! {add_status, node(), {Floor, Direction}} end, nodes())
+      {all_elevators, Node} ! {add_status, node(), {Num_of_orders, Floor, Direction}} end, nodes())
   end.
 
 %broadcast_orders(OrderList) ->
@@ -103,8 +125,8 @@ order_queue(Orders) ->
           % TODO: review line below...
           %elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
           %io:fwrite("Add order"),
-          %Node = stuff:whoHasFewestOrders(),
-          %{pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
+          Node = whoHasFewestOrders(),
+          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
@@ -205,3 +227,5 @@ add_order(Floor, Direction, Order_status) ->
   end.
 
 -endif.
+
+

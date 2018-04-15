@@ -41,8 +41,8 @@ data_storage() ->
     {get_floor, PID} -> PID ! current_floor_getStatus();
     {get_next_move, PID} -> PID ! get_next_move();
     {get_status, PID} -> 
-      io:format("Floor~p  Dir ~p~n", [current_floor_getStatus(), current_direction_getStatus()]),
-      PID ! {current_floor_getStatus(), current_direction_getStatus()}
+      io:format("Num of order: ~p Floor~p  Dir ~p~n", [num_of_active_orders(), current_floor_getStatus(), current_direction_getStatus()]),
+      PID ! {num_of_active_orders(), current_floor_getStatus(), current_direction_getStatus()}
   end,
   data_storage().
 
@@ -168,19 +168,8 @@ get_next_move() ->
   end.
   
 
-
-
-num_of_active_orders( Search_node, [], Number ) ->
-    Number;
-num_of_active_orders( Search_node, [ Item | ListTail ], Number ) ->
-  
-  %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
-  {order, Floor, Button_type, Node} = Item,
-    case ( Node == Search_node ) of
-        true    ->  
-          num_of_active_orders(Search_node, ListTail, Number+1);
-        false   ->  num_of_active_orders(Search_node, ListTail, Number)
-    end.
+num_of_active_orders() ->
+  order_getStatus(0, up) + order_getStatus(0, cab) + order_getStatus(1, up) + order_getStatus(1, down) + order_getStatus(1, cab) + order_getStatus(2, up) + order_getStatus(2, down) + order_getStatus(2, cab) + order_getStatus(3, down) + order_getStatus(3, cab).
 
 
 
