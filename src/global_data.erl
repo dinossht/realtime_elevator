@@ -4,6 +4,7 @@
 -export([ start/0,
           add_order/3,
           remove_order/1,
+          remove_order/2,
           remove_order/3,
           get_orders/0,
           broadcast_status/0,
@@ -71,12 +72,14 @@ add_order(Floor, Direction, Order_status) ->
       true ->
         ok
     end.
-remove_order(Floor, Direction, Order_status) ->
-  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
+
+-ifdef (comment1).
+remove_order(Floor, Direction) ->
+  Order = #order{floor = Floor, direction = Direction},
 %  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},
   lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
-
+-endif.
 remove_order(Order) ->
   io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
   %{_,Floor,Direction,Order_status} = Order,
@@ -149,3 +152,32 @@ listFind ( Element, [ Elev | ListTail ] ) ->
           Status;
         false   ->  listFind(Element, ListTail)
     end.
+
+
+findOrder ( Element, [] ) ->
+    false;
+
+findOrder ( Element, [ Elev | ListTail ] ) ->
+  io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
+  [Node|Status] = Elev,
+    case ( Node == Element ) of
+        true    ->  
+          io:fwrite("Item: ~p",[Elev]),
+          Status;
+        false   ->  listFind(Element, ListTail)
+    end.
+
+
+remove_order(Floor, Direction) ->
+  remove_order(Floor, Direction, 3).
+remove_order(Floor, Direction, Order_status) ->
+  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
+%  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
+  global_orderman ! {remove_order, Order},
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
+
+  case Order_status of
+    0 -> ok;
+    _ -> remove_order(Floor, Direction, Order_status - 1)
+  end.
+
