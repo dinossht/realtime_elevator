@@ -103,6 +103,8 @@ order_queue(Orders) ->
           % TODO: review line below...
           %elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
           io:fwrite("Add order"),
+          Node = stuff:whoHasFewestOrders(),
+          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
