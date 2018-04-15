@@ -2,7 +2,7 @@
 -record(order, {floor, direction}).
 
 -export([ start/0,
-          add_order/2,
+          add_order/3,
           remove_order/2,
           get_orders/0,
           broadcast_status/0,
@@ -82,13 +82,13 @@ broadcast_status() ->
 %status_synchronizer().
 
 
-add_order(Floor, Direction) ->
+add_order(Floor, Direction, Node) ->
   NewOrder = #order{floor = Floor, direction = Direction},
   %GlobalOrders = get_orders_(),
   %case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
   %  false ->
   io:format("Adding order~n"),
-      global_orderman ! {add_order, NewOrder},
+      global_orderman ! {add_order, NewOrder, Node},
       broadcast_orders().
   %  true ->
   %    ok
@@ -119,15 +119,20 @@ order_queue(Orders) ->
   end,
   %io:format("ORDER MANAGER: Orderlist of: ~p~n", [Orders]), %debug
   receive
-    {add_order, NewOrder} ->
+    {add_order, NewOrder, From_node} ->
       case sets:is_element(NewOrder, sets:from_list(Orders)) of
         false ->
           % TODO: review line below...
           %elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
           %io:fwrite("Add order"),
-          Node = whoHasFewestOrders(),
-          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
-          {pid_state_machine, Node} ! {new_order},
+          case From_node == node() of
+	        true ->
+	          Node = whoHasFewestOrders(),
+	          io:format("I am running...~n"),
+	          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
+	          {pid_state_machine, Node} ! {new_order};
+	        false -> ok
+	      end,
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
@@ -147,13 +152,13 @@ broadcast_orders() ->
   GlobalOrders = get_orders(),
 
   lists:foreach(fun(Node) ->
-    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order} end, GlobalOrders)
+    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order, node()} end, GlobalOrders)
   end, nodes()).
 
 broadcast_orders(OrderList) ->
   %io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
   lists:foreach(fun(Node) ->
-    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order} end, OrderList)
+    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order, node()} end, OrderList)
   end, nodes()).
 
 order_synchronizer() ->

@@ -66,7 +66,7 @@ event_handle_upButtonClick(Floor_nr) when Floor_nr =< 2 ->
   case (Button_state == 1) of
     true ->
       %pid_data_storage ! {order_add, Floor_nr, up, 1},
-      global_data:add_order(Floor_nr, up),
+      global_data:add_order(Floor_nr, up, node()),
       pid_state_machine ! {new_order};
     false -> timer:sleep(?ORDER_BUTTON_POLL_PERIOD_MS)
   end,
@@ -83,7 +83,7 @@ event_handle_downButtonClick(Floor_nr) when Floor_nr =< 3 ->
   case (Button_state == 1) of
     true ->
       %pid_data_storage ! {order_add, Floor_nr, down, 1},
-      global_data:add_order(Floor_nr, down),
+      global_data:add_order(Floor_nr, down, node()),
       pid_state_machine ! {new_order};
     false -> timer:sleep(?ORDER_BUTTON_POLL_PERIOD_MS)
   end,
