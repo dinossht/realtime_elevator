@@ -4,13 +4,14 @@
 -export([ start/0,
           add_order/2,
           remove_order/2,
-          get_orders/1 ]).
+          get_orders/1,
+          broadcast_status/0]).
 %-record(order, {floor, direction}).
 -record(status, {floor, direction, state}).
 
 start() ->
   register(global_orderman, spawn(fun() -> order_queue([]) end)),
-  %register(all_elevators, spawn(fun() -> other_elevators([]) end)),
+  register(all_elevators, spawn(fun() -> other_elevators([]) end)),
   spawn(fun order_synchronizer/0).
 
 %{Node, Floor, Dir, State} <- this format
@@ -18,11 +19,29 @@ other_elevators(Elevators) ->
   receive 
     {add_status, Node, Status} -> 
       case listFind(Node, Elevators) of
-        false -> io:fwrite("Dette gikk");
-        [_,_] -> lists:delete([Node, Status],Elevators)
-      end,
-      other_elevators([Elevators]++[Node,Status])
+        false -> io:fwrite("Dette gikk ~n"),
+          io:fwrite("Elevators: ~p",Elevators),
+          other_elevators([Elevators]++[Node,Status]);
+        [_,_] -> lists:delete([Node, Status],Elevators),
+          other_elevators([Elevators]++[Node,Status])
+      end
   end.
+
+broadcast_status() ->
+  io:format("broadcast status!~n"),
+
+  lists:foreach(fun(Node) -> 
+    {all_elevators, Node} ! {add_status, Node, {3,down}} end, nodes()).
+%broadcast_orders(OrderList) ->
+%  io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
+%  lists:foreach(fun(Node) ->
+%    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order} end, OrderList)
+%  end, nodes()).
+%
+%status_synchronizer() ->
+%  timer:sleep(20000),
+%  broadcast_status(),
+%status_synchronizer().
 
 add_order(Floor, Direction) ->
   NewOrder = #order{floor = Floor, direction = Direction},
