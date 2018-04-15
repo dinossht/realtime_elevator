@@ -72,10 +72,11 @@ order_stuff(L) ->
   				false -> 
   					io:fwrite("NEEEEI below")
   			end,
-  			order_stuff(L)
+  			order_stuff(L);
+  		{get_next_move, PID} -> PID ! get_next_move()
   	end. 
 
-get_next_move(Last_floor, Last_direction = up) ->
+get_next_move(Last_floor, Last_direction ) when Last_direction == up ->
 	case request_at_floor(Last_floor) of
 		true -> open;
 		false -> 
@@ -87,8 +88,8 @@ get_next_move(Last_floor, Last_direction = up) ->
 						false -> stop
 					end
 			end
-	end.
-get_next_move(Last_floor, Last_direction = down) ->
+	end;
+get_next_move(Last_floor, Last_direction) when Last_direction == down ->
 	case request_at_floor(Last_floor) of 
 		true -> {open};
 		false ->	
@@ -108,6 +109,7 @@ test_request(Floor) ->
 
 %request_new_direction(Last_direction, Last_floor, PID) ->
 request_at_floor(Floor) ->
+	L = 
 	
 request_at_floor(Floor, L) ->
 	case lists:keyfind(Floor,2 , L) of 
