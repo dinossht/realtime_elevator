@@ -17,6 +17,8 @@ start() ->
   ets:new(order_storage_id, [set, named_table]),
   ets:new(current_direction_storage_id, [set, named_table]),
   ets:new(current_floor_storage_id, [set, named_table]),
+
+  ets:new(network_state_storage_id,[set, named_table]),
   %ets:new(prev_button_state_storage_id, [set, named_table]),
   data_storage().
 
@@ -38,12 +40,14 @@ data_storage() ->
       order_add(current_floor_getStatus(), up, 0),
       order_add(current_floor_getStatus(), down, 0);
 
-    {current_direction_add, Direction} -> current_direction_add(Direction)
+    {current_direction_add, Direction} -> current_direction_add(Direction);
+    {Node, State_data} -> network_elevator_state_add(Node, State_data)
   end,
   data_storage().
 
 
-
+network_elevator_state_add(Node, State_data) ->
+  ets:insert(network_elevator_state_id, {Node, State_data}).
 
 
 order_add(Floor_nr, Button_type, Status) ->
@@ -160,6 +164,10 @@ get_next_move() ->
           stop
       end
   end.
+
+
+
+
 
 
 
