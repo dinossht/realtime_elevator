@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--export([start1/0, start2/0, start/2, stop/1]).
+-export([start1/0, start2/0, start/2, stop/1, start/0]).
 -export([set_motor_direction/2, set_order_button_light/4, set_floor_indicator/2, set_door_open_light/2, set_stop_button_light/2, get_order_button_state/3, get_floor_sensor_state/1, get_stop_button_state/1, get_obstruction_switch_state/1]).
 -export([init/1, handle_cast/2, handle_call/3]).
 
@@ -11,6 +11,8 @@
 start1() ->
     gen_server:start(?MODULE, [{127,0,0,1}, 15657], []).
 
+start() ->
+    gen_server:start(?MODULE, [{127,0,0,1}, 15657], []).
 start2() ->
     gen_server:start(?MODULE, [{127,0,0,1}, 15658], []).
 
