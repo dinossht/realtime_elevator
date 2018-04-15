@@ -40,7 +40,9 @@ data_storage() ->
     {get_direction, PID} -> PID ! current_direction_getStatus();
     {get_floor, PID} -> PID ! current_floor_getStatus();
     {get_next_move, PID} -> PID ! get_next_move();
-    {get_status, PID} -> PID ! {current_floor_getStatus(), current_direction_getStatus()}
+    {get_status, PID} -> 
+      io:format("Floor~p  Dir ~p~n", [current_floor_getStatus(), current_direction_getStatus()]),
+      PID ! {current_floor_getStatus(), current_direction_getStatus()}
   end,
   data_storage().
 
