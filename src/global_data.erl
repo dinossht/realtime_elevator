@@ -63,7 +63,7 @@ add_order(Floor, Direction) ->
         ok
     end.
 remove_order(Floor, Direction) ->
-  Order = #oder{floor = Floor, direction = Direction},
+  Order = #order{floor = Floor, direction = Direction},
   remove_order(Order).
 remove_order(Order) ->
   io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
