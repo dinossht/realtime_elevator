@@ -44,6 +44,7 @@ broadcast_status() ->
   pid_data_storage ! {get_status, self()},
   receive 
     {Floor, Direction} ->
+      io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
       lists:foreach(fun(Node) -> 
       {all_elevators, Node} ! {add_status, node(), {Floor, Direction}} end, nodes())
   end.
