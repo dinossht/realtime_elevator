@@ -26,9 +26,9 @@ listen() ->
 
 listen(ReceiveSocket) ->
   {ok, {_Address, _Port, NodeName}} = gen_udp:recv(ReceiveSocket, 0),
-  io:format("NodeName: ~p~n", [NodeName]), %debug
+  %io:format("NodeName: ~p~n", [NodeName]), %debug
   Node = list_to_atom(NodeName),
-  io:format("is member bool: ~p~n", [lists:member(Node, [node()|nodes()])]), %debug
+  %io:format("is member bool: ~p~n", [lists:member(Node, [node()|nodes()])]), %debug
   case nodes() == [] of
     true -> ok;
     false -> io:format("Nodes: ~p~n", nodes())
@@ -37,7 +37,7 @@ listen(ReceiveSocket) ->
 
   case Node /= node() of
     true -> {test_pid, Node} ! {test};
-    false -> io:format("not me~n")
+    false -> io:format("")
   end,
 
   case lists:member(Node, [node()|nodes()]) of
