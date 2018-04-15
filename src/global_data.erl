@@ -73,19 +73,19 @@ add_order(Floor, Direction, Order_status) ->
         ok
     end.
 
--ifdef (comment1).
 remove_order(Floor, Direction) ->
-  Order = #order{floor = Floor, direction = Direction},
+  remove_order(Floor, Direction, 3).
+remove_order(Floor, Direction, Order_status) ->
+  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
 %  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
--endif.
-remove_order(Order) ->
-  io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
-  %{_,Floor,Direction,Order_status} = Order,
-  %global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
-  global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
+
+  case Order_status of
+    0 -> ok;
+    _ -> remove_order(Floor, Direction, Order_status - 1)
+  end.
+
 
 get_orders() ->
   global_orderman ! {get_orders, self()},
@@ -168,16 +168,18 @@ findOrder ( Element, [ Elev | ListTail ] ) ->
     end.
 
 
+-ifdef (comment1).
 remove_order(Floor, Direction) ->
-  remove_order(Floor, Direction, 3).
-remove_order(Floor, Direction, Order_status) ->
-  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
+  Order = #order{floor = Floor, direction = Direction},
 %  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
   global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
+-endif.
+remove_order(Order) ->
+  io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
+  %{_,Floor,Direction,Order_status} = Order,
+  %global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
+  global_orderman ! {remove_order, Order},
+  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
 
-  case Order_status of
-    0 -> ok;
-    _ -> remove_order(Floor, Direction, Order_status - 1)
-  end.
 
