@@ -22,7 +22,7 @@ other_elevators(Elevators) ->
       case Elevators of
         [] -> io:fwrite("tom liste");
       _ -> io:fwrite("Elevators: ~p",[Elevators])
-        end,
+      end,
       io:fwrite("Hva er dette? ~p~n",[Status]),
       case listFind(Node, Elevators) of
         false -> io:fwrite("Dette gikk ~n"),
@@ -33,14 +33,21 @@ other_elevators(Elevators) ->
           other_elevators([[Node,Status]] ++ Elevators);
         [OldStatus] -> 
           other_elevators([[Node,Status]] ++ lists:delete([Node,OldStatus],Elevators))
-      end
+      end;
+    {get_status, PID} ->
+      PID ! {status, Elevators},
+      other_elevators(Elevators)
   end.
 
 broadcast_status() ->
   io:format("broadcast status!~n"),
+  pid_data_storage ! {get_status, self()},
+  receive 
+    {Floor, Direction} ->
+      lists:foreach(fun(Node) -> 
+      {all_elevators, Node} ! {add_status, node(), {Floor, Direction}} end, nodes())
+  end.
 
-  lists:foreach(fun(Node) -> 
-    {all_elevators, Node} ! {add_status, node(), {3,down}} end, nodes()).
 %broadcast_orders(OrderList) ->
 %  io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
 %  lists:foreach(fun(Node) ->

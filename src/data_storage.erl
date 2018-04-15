@@ -29,16 +29,18 @@ print(L) ->
 
 data_storage() ->
   receive
-    {get_next_move, PID} -> PID ! get_next_move();
     {current_floor_add, Floor_nr} -> current_floor_add(Floor_nr);
     {order_add, Floor_nr, Button_type, Status} -> order_add(Floor_nr, Button_type, Status);
+    {current_direction_add, Direction} -> current_direction_add(Direction);
     {order_remove} ->
       %order_add(current_floor_getStatus(), current_direction_getStatus(), 0),
       order_add(current_floor_getStatus(), cab, 0),
       order_add(current_floor_getStatus(), up, 0),
       order_add(current_floor_getStatus(), down, 0);
-
-    {current_direction_add, Direction} -> current_direction_add(Direction)
+    {get_direction, PID} -> PID ! current_direction_getStatus();
+    {get_floor, PID} -> PID ! current_floor_getStatus();
+    {get_next_move, PID} -> PID ! get_next_move();
+    {get_status, PID} -> PID ! {current_floor_getStatus(), current_direction_getStatus()}
   end,
   data_storage().
 
