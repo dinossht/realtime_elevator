@@ -52,10 +52,12 @@ data_storage() ->
 
 order_add(Floor_nr, Button_type, Status) ->
   case Status == 1 of
-    true -> set_order_button_light_(Button_type, Floor_nr, on);
-    false -> set_order_button_light_(Button_type, Floor_nr, off)
+    true ->
+      set_order_button_light_(Button_type, Floor_nr, on);
+    false ->
+      global_data:remove_order(Floor_nr, Button_type),
+      set_order_button_light_(Button_type, Floor_nr, off)
   end,
-
   ets:insert(order_storage_id, {{Floor_nr, Button_type}, Status}),
   Order = ets:lookup(order_storage_id, {Floor_nr, Button_type}),
   print(Order).
