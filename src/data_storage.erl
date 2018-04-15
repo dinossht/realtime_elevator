@@ -166,6 +166,22 @@ get_next_move() ->
           stop
       end
   end.
+  
+
+
+
+num_of_active_orders( Search_node, [], Number ) ->
+    Number;
+num_of_active_orders( Search_node, [ Item | ListTail ], Number ) ->
+  
+  %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
+  {order, Floor, Button_type, Node} = Item,
+    case ( Node == Search_node ) of
+        true    ->  
+          num_of_active_orders(Search_node, ListTail, Number+1);
+        false   ->  num_of_active_orders(Search_node, ListTail, Number)
+    end.
+
 
 
 

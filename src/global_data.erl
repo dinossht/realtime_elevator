@@ -86,7 +86,7 @@ get_orders() ->
     {orders, Orders} ->
       Orders
     after 500 ->%?RECEIVE_BLOCK_TIME ->
-      io:format("~s Order manager waiting for orders in get_orders().~n", [color:red("RECEIVE TIMEOUT:")]),
+      %io:format("~s Order manager waiting for orders in get_orders().~n", [color:red("RECEIVE TIMEOUT:")]),
       []
   end.
 
@@ -102,9 +102,9 @@ order_queue(Orders) ->
         false ->
           % TODO: review line below...
           %elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
-          io:fwrite("Add order"),
-          Node = stuff:whoHasFewestOrders(),
-          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
+          %io:fwrite("Add order"),
+          %Node = stuff:whoHasFewestOrders(),
+          %{pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
