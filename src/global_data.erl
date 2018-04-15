@@ -26,25 +26,14 @@ other_elevators(Elevators) ->
 
 add_order(Floor, Direction) ->
   NewOrder = #order{floor = Floor, direction = Direction},
-  case Direction of
-    command ->
-      LocalOrders = get_orders(localorderman),
-      case sets:is_element(NewOrder, sets:from_list(LocalOrders)) of
-        false ->
-          localorderman ! {add_order, NewOrder};
-        true ->
-          ok
-      end;
-    _Other ->
-      GlobalOrders = get_orders(orderman),
-      case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
-        false ->
-          orderman ! {add_order, NewOrder},
-          broadcast_orders();
-        true ->
-          ok
-      end
-  end.
+    GlobalOrders = get_orders(global_orderman),
+    case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
+      false ->
+        global_orderman ! {add_order, NewOrder},
+        broadcast_orders();
+      true ->
+        ok
+    end.
 
 remove_order(QueueName, Order) ->
   io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [QueueName, Order]),
@@ -73,7 +62,8 @@ order_queue(Orders) ->
       case sets:is_element(NewOrder, sets:from_list(Orders)) of
         false ->
           % TODO: review line below...
-          elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
+          %elev_driver:set_button_lamp(element(2, NewOrder),element(3, NewOrder), on),
+          io:fwrite("Add order"),
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
@@ -103,7 +93,7 @@ broadcast_orders(OrderList) ->
   end, nodes()).
 
 order_synchronizer() ->
-  timer:sleep(5000),
+  timer:sleep(20000),
   broadcast_orders(),
 order_synchronizer().
 
