@@ -20,7 +20,10 @@ other_elevators(Elevators) ->
     {add_status, Node, Status} -> 
       case listFind(Node, Elevators) of
         false -> io:fwrite("Dette gikk ~n"),
-          io:fwrite("Elevators: ~p",Elevators),
+          case Elevators of
+            [] -> io:fwrite("tom liste");
+            _ -> io:fwrite("Elevators: ~p",Elevators)
+          end,
           other_elevators([Elevators]++[Node,Status]);
         [_,_] -> lists:delete([Node, Status],Elevators),
           other_elevators([Elevators]++[Node,Status])
