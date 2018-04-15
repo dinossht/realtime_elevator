@@ -127,6 +127,7 @@ order_queue(Orders) ->
           %io:fwrite("Add order"),
           Node = whoHasFewestOrders(),
           {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
+          {pid_state_machine, Node} ! {new_order},
           order_queue(Orders ++ [NewOrder]);
         true ->
           order_queue(Orders)
