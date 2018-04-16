@@ -13,7 +13,7 @@ set_order_button_light_(down, Floor_nr, State) ->
 
 
 start() ->
-  io:format("Start data storage module ~n"),
+  io:format("Start order processor module ~n"),
   ets:new(order_storage_id, [set, named_table]),
   ets:new(current_direction_storage_id, [set, named_table]),
   ets:new(current_floor_storage_id, [set, named_table]),

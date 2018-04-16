@@ -1,33 +1,24 @@
 -module(global_data).
 -record(order, {floor, direction}).
 
--export([ start/0,
-          add_order/3,
-          remove_order/2,
-          get_orders/0,
-          broadcast_status/0,
-          listFind/2,
-          whoHasFewestOrders/0]).
-%-record(status, {floor, direction, state}).
+-export([start/0, add_order/3, remove_order/2, get_orders/0, broadcast_status/0, listFind/2, get_elevator_with_least_orders/0]).
 
 start() ->
-  register(global_orderman, spawn(fun() -> order_queue([]) end)),
+  register(pid_global_orders, spawn(fun() -> order_queue([]) end)),
   register(all_elevators, spawn(fun() -> other_elevators([]) end)),
   spawn(fun order_synchronizer/0).
 
-%{Node, Floor, Dir, State} <- this format
 other_elevators(Elevators) ->
   receive 
     {add_status, Node, Status} -> 
       case Elevators of
-        [] -> io:fwrite("tom liste");
+        [] -> io:fwrite("");
       _ -> io:fwrite("Elevators: ~p",[Elevators])
       end,
-      %io:fwrite("Hva er dette? ~p~n",[Status]),
       case listFind(Node, Elevators) of
         false -> io:fwrite("Dette gikk ~n"),
           case Elevators of
-            [] -> io:fwrite("tom liste");
+            [] -> io:fwrite("");
             _ -> io:fwrite("Elevators: ~p~n",[Elevators])
           end,
           other_elevators([[Node,Status]] ++ Elevators);
@@ -39,7 +30,7 @@ other_elevators(Elevators) ->
       other_elevators(Elevators)
   end.
 
-whoHasFewestOrders() ->
+get_elevator_with_least_orders() ->
   all_elevators ! {get_status, self()},
 
   receive
@@ -52,8 +43,6 @@ recursiveShit(_, Node, []) ->
   Node;
 recursiveShit(Number, Node, [Head|Tail]) ->
   [New_node, {Num_of_orders, _, _}] = Head,
-  io:fwrite("Node = ~p.  Number: ~p~n", [Node,Number]),
-  io:fwrite("Head: ~p.   Tails: ~p~n",[Head,Tail]),
   case Num_of_orders < Number of
     true -> recursiveShit(Num_of_orders, New_node, Tail);
     false -> recursiveShit(Number, Node, Tail)
@@ -88,7 +77,7 @@ add_order(Floor, Direction, Node) ->
   %case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
   %  false ->
   io:format("Adding order~n"),
-      global_orderman ! {add_order, NewOrder, Node},
+      pid_global_orders ! {add_order, NewOrder, Node},
       broadcast_orders().
   %  true ->
   %    ok
@@ -97,13 +86,12 @@ add_order(Floor, Direction, Node) ->
 
 remove_order(Floor, Direction) ->
   Order = #order{floor = Floor, direction = Direction},
-%  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
-  global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
+  pid_global_orders ! {remove_order, Order},
+  lists:foreach(fun(Node) -> {pid_global_orders, Node} ! {remove_order, Order} end, nodes()).
 
 
 get_orders() ->
-  global_orderman ! {get_orders, self()},
+  pid_global_orders ! {get_orders, self()},
   receive
     {orders, Orders} ->
       Orders
@@ -127,7 +115,7 @@ order_queue(Orders) ->
           %io:fwrite("Add order"),
           case From_node == node() of
 	        true ->
-	          Node = whoHasFewestOrders(),
+	          Node = get_elevator_with_least_orders(),
 	          io:format("I am running...~n"),
 	          {pid_order_processor, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
 	          {pid_state_machine, Node} ! {new_order};
@@ -148,17 +136,15 @@ order_queue(Orders) ->
   end.
 
 broadcast_orders() ->
-  %io:format("broadcast broadcast!~n"),
   GlobalOrders = get_orders(),
 
   lists:foreach(fun(Node) ->
-    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order, node()} end, GlobalOrders)
+    lists:foreach(fun(Order) -> {pid_global_orders, Node} ! {add_order, Order, node()} end, GlobalOrders)
   end, nodes()).
 
 broadcast_orders(OrderList) ->
-  %io:format("ORDER MANAGER: broadcasting orderlist: ~p~n", [OrderList]),
   lists:foreach(fun(Node) ->
-    lists:foreach(fun(Order) -> {global_orderman, Node} ! {add_order, Order, node()} end, OrderList)
+    lists:foreach(fun(Order) -> {pid_global_orders, Node} ! {add_order, Order, node()} end, OrderList)
   end, nodes()).
 
 order_synchronizer() ->
@@ -195,43 +181,5 @@ findOrder ( Element, [ Elev | ListTail ] ) ->
         false   ->  listFind(Element, ListTail)
     end.
 
-
--ifdef (comment1).
-remove_order(Floor, Direction) ->
-  remove_order(Floor, Direction, 3).
-remove_order(Floor, Direction, Order_status) ->
-  Order = #order{floor = Floor, direction = Direction, order_status = Order_status},
-%  global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
-  global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()),
-
-  case Order_status of
-    0 -> ok;
-    _ -> remove_order(Floor, Direction, Order_status - 1)
-  end.
-
-remove_order(Order) ->
-  %io:format("ORDER MANAGER: remove_order(~p, ~p)~n", [global_orderman, Order]),
-  %{_,Floor,Direction,Order_status} = Order,
-  %global_orderman ! {remove_order, #order{floor = Floor, direction = Direction, order_status = Order_status}},
-  global_orderman ! {remove_order, Order},
-  lists:foreach(fun(Node) -> {global_orderman, Node} ! {remove_order, Order} end, nodes()).
-
--endif.
-
-
--ifdef(comment3).
-add_order(Floor, Direction, Order_status) ->
-  NewOrder = #order{floor = Floor, direction = Direction, order_status = Order_status},
-  GlobalOrders = get_orders(),
-  case sets:is_element(NewOrder, sets:from_list(GlobalOrders)) of
-    false ->
-      global_orderman ! {add_order, NewOrder},
-      broadcast_orders();
-    true ->
-      ok
-  end.
-
--endif.
 
 
