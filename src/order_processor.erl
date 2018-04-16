@@ -2,7 +2,7 @@
 -export([start/0, order_add/3, order_getStatus/2, prev_button_state_add/3, prev_button_state_getStatus/2, current_direction_add/1, current_direction_getStatus/0, current_floor_add/1, current_floor_getStatus/0]).
 -export([get_next_move/0]).
 
-%TODO: Fix bestilling i current_floor når bestilling er motsatt retning.
+-define(NUMB_OF_ORDERS, 4).
 
 set_order_button_light_(cab, Floor_nr, State) ->
   elevator_interface:set_order_button_light(pid_elevator_interface, cab, Floor_nr, State);
@@ -11,56 +11,44 @@ set_order_button_light_(up, Floor_nr, State) ->
 set_order_button_light_(down, Floor_nr, State) ->
   elevator_interface:set_order_button_light(pid_elevator_interface, hall_down, Floor_nr, State).
 
-
 start() ->
   io:format("Start order processor module ~n"),
   ets:new(order_storage_id, [set, named_table]),
   ets:new(current_direction_storage_id, [set, named_table]),
   ets:new(current_floor_storage_id, [set, named_table]),
-  %ets:new(prev_button_state_storage_id, [set, named_table]),
-  data_storage().
+  local_data_storage().
 
-print(L) ->
-  case L of
-    [] -> io:format("Order empty~n");
-    _ -> io:format("Order : ~62p~n", L)
-  end.
-
-
-data_storage() ->
+local_data_storage() ->
   receive
-    {current_floor_add, Floor_nr} -> current_floor_add(Floor_nr);
-    {order_add, Floor_nr, Button_type, Status} -> order_add(Floor_nr, Button_type, Status);
-    {current_direction_add, Direction} -> current_direction_add(Direction);
+    {current_floor_add, Floor_nr} ->
+      current_floor_add(Floor_nr);
+    {order_add, Floor_nr, Button_type, Status} ->
+      order_add(Floor_nr, Button_type, Status);
+    {current_direction_add, Direction} ->
+      current_direction_add(Direction);
     {order_remove} ->
-      %order_add(current_floor_getStatus(), current_direction_getStatus(), 0),
-      order_add(current_floor_getStatus(), cab, 0),
-      order_add(current_floor_getStatus(), up, 0),
-      order_add(current_floor_getStatus(), down, 0);
-    {get_direction, PID} -> PID ! current_direction_getStatus();
-    {get_floor, PID} -> PID ! current_floor_getStatus();
-    {get_next_move, PID} -> PID ! get_next_move();
-    {get_status, PID} -> 
-      io:format("Num of order: ~p Floor~p  Dir ~p~n", [num_of_active_orders(), current_floor_getStatus(), current_direction_getStatus()]),
+      remove_order_at_current_floor();
+    {get_direction, PID} ->
+      PID ! current_direction_getStatus();
+    {get_floor, PID} ->
+      PID ! current_floor_getStatus();
+    {get_next_move, PID} ->
+      PID ! get_next_move();
+    {get_status, PID} ->
       PID ! {num_of_active_orders(), current_floor_getStatus(), current_direction_getStatus()}
   end,
-  data_storage().
+  local_data_storage().
 
-
-
-
-
+% Status 1 = Add order, Status 0 = remove order
 order_add(Floor_nr, Button_type, Status) ->
   case Status == 1 of
-    true ->
-      set_order_button_light_(Button_type, Floor_nr, on);
+    true -> set_order_button_light_(Button_type, Floor_nr, on);
     false ->
       global_data:remove_order(Floor_nr, Button_type),
       set_order_button_light_(Button_type, Floor_nr, off)
   end,
-  ets:insert(order_storage_id, {{Floor_nr, Button_type}, Status}),
-  Order = ets:lookup(order_storage_id, {Floor_nr, Button_type}),
-  print(Order).
+  % Store order
+  ets:insert(order_storage_id, {{Floor_nr, Button_type}, Status}).
 
 order_getStatus(Floor_nr, Button_type) ->
   Order = ets:lookup(order_storage_id, {Floor_nr, Button_type}),
@@ -70,19 +58,6 @@ order_getStatus(Floor_nr, Button_type) ->
       {{_,_},Status} = H,
       Status
   end.
-
-
-prev_button_state_add(Floor_nr, Button_type, Status) ->
-  ets:insert(prev_button_state_storage_id, {{Floor_nr, Button_type},Status}).
-prev_button_state_getStatus(Floor_nr, Button_type) ->
-  Order = ets:lookup(prev_button_state_storage_id, {Floor_nr, Button_type}),
-  case Order of
-    [] -> 0;
-    [H|_] ->
-      {{_,_},Status} = H,
-      Status
-  end.
-
 
 current_direction_add(Direction) ->
   ets:insert(current_direction_storage_id, {direction, Direction}).
@@ -95,7 +70,6 @@ current_direction_getStatus() ->
       Direction
   end.
 
-
 current_floor_add(Floor_nr) ->
   ets:insert(current_floor_storage_id, {floor_nr, Floor_nr}).
 current_floor_getStatus() ->
@@ -107,13 +81,12 @@ current_floor_getStatus() ->
       Floor_nr
   end.
 
-
 request_at_floor(Floor_nr, Direction) ->
   (order_getStatus(Floor_nr, Direction) == 1) or (order_getStatus(Floor_nr, cab) == 1).
 request_at_floor(Floor_nr) ->
   request_at_floor(Floor_nr, up) or request_at_floor(Floor_nr, down).
 request_above(Floor_nr) ->
-  case Floor_nr < 4 - 1 of
+  case Floor_nr < (?NUMB_OF_ORDERS - 1) of
     true ->
       case request_at_floor(Floor_nr + 1) of
         true -> true;
@@ -130,7 +103,6 @@ request_below(Floor_nr) ->
       end;
     false -> false
   end.
-
 
 get_next_move() ->
   Current_direction = current_direction_getStatus(),
@@ -161,16 +133,17 @@ get_next_move() ->
                   stop
               end
           end;
-        _ ->
-          io:format("default ~n"),
-          stop
+        _ -> stop
       end
   end.
-  
 
 num_of_active_orders() ->
   order_getStatus(0, up) + order_getStatus(0, cab) + order_getStatus(1, up) + order_getStatus(1, down) + order_getStatus(1, cab) + order_getStatus(2, up) + order_getStatus(2, down) + order_getStatus(2, cab) + order_getStatus(3, down) + order_getStatus(3, cab).
 
+remove_order_at_current_floor() ->
+  order_add(current_floor_getStatus(), cab, 0),
+  order_add(current_floor_getStatus(), up, 0),
+  order_add(current_floor_getStatus(), down, 0).
 
 
 
