@@ -47,8 +47,8 @@ get_elevator_with_least_orders(_, Node, []) ->
 get_elevator_with_least_orders(Number, Node, [Head|Tail]) ->
   [New_node,{Num_of_orders,_,_}] = Head,
   case Num_of_orders < Number of
-    true -> recursiveShit(Num_of_orders, New_node, Tail);
-    false -> recursiveShit(Number, Node, Tail)
+    true -> get_elevator_with_least_orders(Num_of_orders, New_node, Tail);
+    false -> get_elevator_with_least_orders(Number, Node, Tail)
   end.
 
 broadcast_status() ->
