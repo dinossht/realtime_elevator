@@ -1,4 +1,7 @@
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This library was provided
+% with the project
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(elevator_interface).
 

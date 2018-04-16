@@ -62,7 +62,7 @@ recursiveShit(Number, Node, [Head|Tail]) ->
 
 broadcast_status() ->
   %io:format("broadcast status!~n"),
-  pid_data_storage ! {get_status, self()},
+  pid_order_processor ! {get_status, self()},
   receive 
     {Num_of_orders, Floor, Direction} ->
       %io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
@@ -129,7 +129,7 @@ order_queue(Orders) ->
 	        true ->
 	          Node = whoHasFewestOrders(),
 	          io:format("I am running...~n"),
-	          {pid_data_storage, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
+	          {pid_order_processor, Node} ! {order_add, NewOrder#order.floor, NewOrder#order.direction, 1},%   add_order(Order),
 	          {pid_state_machine, Node} ! {new_order};
 	        false -> ok
 	      end,

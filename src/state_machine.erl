@@ -26,7 +26,7 @@ start() ->
 state_init() ->
   set_motor_direction(down),
   % Initialize current direction as direction down
-  pid_data_storage ! {current_direction_add, down},
+  pid_order_processor ! {current_direction_add, down},
   receive
     {floor_detected} ->
       state_idle()
@@ -36,7 +36,7 @@ state_init() ->
 state_idle() ->
   flush_message_buffer(),
   set_motor_direction(stop),
-  pid_data_storage ! {get_next_move, self()},
+  pid_order_processor ! {get_next_move, self()},
     receive
       up ->
         io:format("Moving ~p~n", [up]),
@@ -60,12 +60,12 @@ state_open_door() ->
   timer:sleep(?DOOR_OPEN_TIMEOUT_MS),
   io:format("Door closed~n"),
   set_door_open_light(off),
-  pid_data_storage ! {order_remove},
+  pid_order_processor ! {order_remove},
   state_idle().
 
 state_moving(Direction) ->
   set_motor_direction(Direction),
-  pid_data_storage ! {current_direction_add, Direction},
+  pid_order_processor ! {current_direction_add, Direction},
   timer:sleep(?FLOOR_DETECTION_DELAY_MS),
   flush_message_buffer(),
   receive
