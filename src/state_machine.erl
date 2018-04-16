@@ -1,11 +1,15 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Credits:
+% This code is inspired by
+% Kjetil Kjeka's Real-time-elevator
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 -module(state_machine).
 -export([start/0]).
 
 -define(DOOR_OPEN_TIMEOUT_MS, 3000).
--define(FLOOR_DETECTION_DELAY_MS, 500).
+-define(FLOOR_DETECTION_DELAY_MS, 200).
 
-
-%TODO Should update state data to send via network
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Elevator interface wrapper %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,9 +23,7 @@ start() ->
   io:format("Start state machine module~n"),
   state_init().
 
-
 state_init() ->
-  io:format("State: startup~n"),
   set_motor_direction(down),
   pid_data_storage ! {current_direction_add, down},
   receive
@@ -32,19 +34,23 @@ state_init() ->
 
 state_idle() ->
   flush_message_buffer(),
-  io:format("State: idle~n"),
   set_motor_direction(stop),
   pid_data_storage ! {get_next_move, self()},
     receive
-      up -> state_moving(up);
-      down -> state_moving(down);
+      up ->
+        io:format("Moving ~p~n", [up]),
+        state_moving(up);
+      down ->
+        io:format("Moving ~p~n", [down]),
+        state_moving(down);
       open_door -> state_open_door();
       stop ->
         receive
-          {new_order} -> state_idle()
+          {new_order} ->
+            io:format("State: idle~n"),
+            state_idle()
         end
     end.
-
 
 state_open_door() ->
   flush_message_buffer(),
@@ -56,11 +62,9 @@ state_open_door() ->
   pid_data_storage ! {order_remove},
   state_idle().
 
-
 state_moving(Direction) ->
   set_motor_direction(Direction),
   pid_data_storage ! {current_direction_add, Direction},
-  io:format("Moving ~p~n", [Direction]),
   timer:sleep(?FLOOR_DETECTION_DELAY_MS),
   flush_message_buffer(),
   receive
@@ -68,11 +72,16 @@ state_moving(Direction) ->
       state_idle()
   end.
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper function %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Clear up buffer which tempts to fill up during message passing
+% This is used to get the latest message from other processes
 flush_message_buffer() ->
   receive _Any -> flush_message_buffer()
   after 0 -> ok
   end.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
