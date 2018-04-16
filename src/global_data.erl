@@ -1,37 +1,37 @@
 -module(global_data).
 -record(order, {floor, direction}).
 
--export([start/0, add_order/3, remove_order/2, get_orders/0, broadcast_status/0, listFind/2, get_elevator_with_least_orders/0]).
+-export([start/0, add_order/3, remove_order/2, get_orders/0, broadcast_status/0, list_find/2]).
 
 start() ->
   register(pid_global_orders, spawn(fun() -> order_queue([]) end)),
-  register(all_elevators, spawn(fun() -> other_elevators([]) end)),
+  register(pid_other_elevators_handler, spawn(fun() -> other_elevators_handler([]) end)),
   spawn(fun order_synchronizer/0).
 
-other_elevators(Elevators) ->
+other_elevators_handler(Elevators) ->
   receive 
     {add_status, Node, Status} -> 
       case Elevators of
         [] -> io:fwrite("");
       _ -> io:fwrite("Elevators: ~p",[Elevators])
       end,
-      case listFind(Node, Elevators) of
+      case list_find(Node, Elevators) of
         false -> io:fwrite("Dette gikk ~n"),
           case Elevators of
             [] -> io:fwrite("");
             _ -> io:fwrite("Elevators: ~p~n",[Elevators])
           end,
-          other_elevators([[Node,Status]] ++ Elevators);
-        [OldStatus] -> 
-          other_elevators([[Node,Status]] ++ lists:delete([Node,OldStatus],Elevators))
+          other_elevators_handler([[Node,Status]] ++ Elevators);
+        [OldStatus] ->
+          other_elevators_handler([[Node,Status]] ++ lists:delete([Node,OldStatus],Elevators))
       end;
     {get_status, PID} ->
       PID ! {status, Elevators},
-      other_elevators(Elevators)
+      other_elevators_handler(Elevators)
   end.
 
 get_elevator_with_least_orders() ->
-  all_elevators ! {get_status, self()},
+  pid_other_elevators_handler ! {get_status, self()},
 
   receive
     {status, Elevators} ->
@@ -56,7 +56,7 @@ broadcast_status() ->
     {Num_of_orders, Floor, Direction} ->
       %io:format("Floor~p  Dir ~p~n", [Floor, Direction]),
       lists:foreach(fun(Node) -> 
-      {all_elevators, Node} ! {add_status, node(), {Num_of_orders, Floor, Direction}} end, nodes())
+      {pid_other_elevators_handler, Node} ! {add_status, node(), {Num_of_orders, Floor, Direction}} end, nodes())
   end.
 
 %broadcast_orders(OrderList) ->
@@ -154,32 +154,19 @@ order_synchronizer() ->
 order_synchronizer().
 
 
-listFind ( Element, [] ) ->
+list_find ( Element, [] ) ->
     false;
 
-listFind ( Element, [ Elev | ListTail ] ) ->
+list_find ( Element, [ Elev | ListTail ] ) ->
   %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
   [Node|Status] = Elev,
     case ( Node == Element ) of
         true    ->  
           %io:fwrite("Item: ~p",[Elev]),
           Status;
-        false   ->  listFind(Element, ListTail)
+        false   ->  list_find(Element, ListTail)
     end.
 
-
-findOrder ( Element, [] ) ->
-    false;
-
-findOrder ( Element, [ Elev | ListTail ] ) ->
-  %io:fwrite("Element: ~p.  Elev: ~p.  ListTail: ~p.",[Element,Elev,ListTail]),
-  [Node|Status] = Elev,
-    case ( Node == Element ) of
-        true    ->  
-          %io:fwrite("Item: ~p",[Elev]),
-          Status;
-        false   ->  listFind(Element, ListTail)
-    end.
 
 
 
