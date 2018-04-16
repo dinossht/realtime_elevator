@@ -1,5 +1,5 @@
 -module(order_processor).
--export([start/0, order_add/3, order_getStatus/2, prev_button_state_add/3, prev_button_state_getStatus/2, current_direction_add/1, current_direction_getStatus/0, current_floor_add/1, current_floor_getStatus/0]).
+-export([start/0, order_add/3, order_getStatus/2, current_direction_add/1, current_direction_getStatus/0, current_floor_add/1, current_floor_getStatus/0]).
 -export([get_next_move/0]).
 
 -define(NUMB_OF_ORDERS, 4).
