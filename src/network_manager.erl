@@ -1,4 +1,4 @@
--module(networkManager).
+-module(network_manager).
 -export([start/0, name_manager/1]).
 
 -define(RECEIVE_PORT, 20066).
