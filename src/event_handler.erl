@@ -1,3 +1,8 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This library was provided
+% with the project
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 -module(event_handler).
 -export([start/0]).
 

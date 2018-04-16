@@ -8,7 +8,7 @@
 -export([start/0]).
 
 -define(DOOR_OPEN_TIMEOUT_MS, 3000).
--define(FLOOR_DETECTION_DELAY_MS, 200).
+-define(FLOOR_DETECTION_DELAY_MS, 500).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Elevator interface wrapper %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,6 +25,7 @@ start() ->
 
 state_init() ->
   set_motor_direction(down),
+  % Initialize current direction as direction down
   pid_data_storage ! {current_direction_add, down},
   receive
     {floor_detected} ->
