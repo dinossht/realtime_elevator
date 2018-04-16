@@ -81,25 +81,25 @@ current_floor_getStatus() ->
       Floor_nr
   end.
 
-request_at_floor(Floor_nr, Direction) ->
+order_at_floor(Floor_nr, Direction) ->
   (order_getStatus(Floor_nr, Direction) == 1) or (order_getStatus(Floor_nr, cab) == 1).
-request_at_floor(Floor_nr) ->
-  request_at_floor(Floor_nr, up) or request_at_floor(Floor_nr, down).
-request_above(Floor_nr) ->
+order_at_floor(Floor_nr) ->
+  order_at_floor(Floor_nr, up) or order_at_floor(Floor_nr, down).
+order_above(Floor_nr) ->
   case Floor_nr < (?NUMB_OF_ORDERS - 1) of
     true ->
-      case request_at_floor(Floor_nr + 1) of
+      case order_at_floor(Floor_nr + 1) of
         true -> true;
-        false -> request_above(Floor_nr + 1)
+        false -> order_above(Floor_nr + 1)
       end;
     false -> false
   end.
-request_below(Floor_nr) ->
+order_below(Floor_nr) ->
   case Floor_nr > 0 of
     true ->
-      case request_at_floor(Floor_nr - 1) of
+      case order_at_floor(Floor_nr - 1) of
         true -> true;
-        false -> request_below(Floor_nr - 1)
+        false -> order_below(Floor_nr - 1)
       end;
     false -> false
   end.
@@ -107,15 +107,15 @@ request_below(Floor_nr) ->
 get_next_move() ->
   Current_direction = current_direction_getStatus(),
   Current_floor_nr = current_floor_getStatus(),
-  case request_at_floor(Current_floor_nr) of
+  case order_at_floor(Current_floor_nr) of
     true -> open_door;
     false ->
       case Current_direction of
         up ->
-          case request_above(Current_floor_nr) of
+          case order_above(Current_floor_nr) of
             true -> up;
             false ->
-              case request_below(Current_floor_nr) of
+              case order_below(Current_floor_nr) of
                 true -> down;
                 false ->
                   %io:format("dir up stop ~n"),
@@ -123,10 +123,10 @@ get_next_move() ->
               end
           end;
         down ->
-          case request_below(Current_floor_nr) of
+          case order_below(Current_floor_nr) of
             true -> down;
             false ->
-              case request_above(Current_floor_nr) of
+              case order_above(Current_floor_nr) of
                 true -> up;
                 false ->
                   %io:format("dir down stop ~n"),
@@ -137,13 +137,22 @@ get_next_move() ->
       end
   end.
 
-num_of_active_orders() ->
-  order_getStatus(0, up) + order_getStatus(0, cab) + order_getStatus(1, up) + order_getStatus(1, down) + order_getStatus(1, cab) + order_getStatus(2, up) + order_getStatus(2, down) + order_getStatus(2, cab) + order_getStatus(3, down) + order_getStatus(3, cab).
-
 remove_order_at_current_floor() ->
   order_add(current_floor_getStatus(), cab, 0),
   order_add(current_floor_getStatus(), up, 0),
   order_add(current_floor_getStatus(), down, 0).
+
+num_of_active_orders() ->
+  order_getStatus(0, up) +
+  order_getStatus(0, cab) +
+  order_getStatus(1, up) +
+  order_getStatus(1, down) +
+  order_getStatus(1, cab) +
+  order_getStatus(2, up) +
+  order_getStatus(2, down) +
+  order_getStatus(2, cab) +
+  order_getStatus(3, down) +
+  order_getStatus(3, cab).
 
 
 

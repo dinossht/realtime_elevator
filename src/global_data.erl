@@ -2,7 +2,6 @@
 -export([start/0, add_order/3, remove_order/2, get_orders/0, broadcast_status/0, list_find/2]).
 
 -define(NUMBER_OF_FLOORS, 4).
-
 -record(order, {floor, direction}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
